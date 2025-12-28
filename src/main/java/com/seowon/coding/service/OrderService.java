@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,44 @@ public class OrderService {
         // * order 를 저장
         // * 각 Product 의 재고를 수정
         // * placeOrder 메소드의 시그니처는 변경하지 않은 채 구현하세요.
+
+        Order order = Order.builder()
+                .customerName(customerName)
+                .customerEmail(customerEmail)
+                .status(Order.OrderStatus.PENDING)
+                .orderDate(LocalDateTime.now())
+                .items(new ArrayList<>())
+                .build();
+
+        List<OrderProduct> orderProducts = new ArrayList<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
+
+        for (OrderProduct req : orderProducts) {
+            Long pid = req.getProductId();
+            int qty = req.getQuantity();
+
+            Product product = productRepository.findById(pid)
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + pid));
+            if (qty <= 0) {
+                throw new IllegalArgumentException("quantity must be positive: " + qty);
+            }
+            if (product.getStockQuantity() < qty) {
+                throw new IllegalStateException("insufficient stock for product " + pid);
+            }
+
+            OrderItem item = OrderItem.builder()
+                    .order(order)
+                    .product(product)
+                    .quantity(qty)
+                    .price(product.getPrice())
+                    .build();
+            order.getItems().add(item);
+
+            product.decreaseStock(qty);
+            subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(qty)));
+        }
+
+
         return null;
     }
 
