@@ -1,6 +1,8 @@
 package com.seowon.coding.controller;
 
 import com.seowon.coding.domain.model.Order;
+import com.seowon.coding.domain.model.Product;
+import com.seowon.coding.service.OrderProduct;
 import com.seowon.coding.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -66,5 +68,11 @@ public class OrderController {
      *   ]
      * }
      */
-    //
+    public ResponseEntity<Order> createOrder(@RequestBody String customerName,
+                                             @RequestBody String customerEmail,
+                                             @RequestBody List<Long> productIds,
+                                             @RequestBody List<Integer> quantity){
+        Order createdOrder = orderService.placeOrder(customerName, customerEmail, productIds, quantity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
+    }
 }
